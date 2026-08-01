@@ -359,6 +359,7 @@
     let stars = 0;
     let coins = 0;
     let currentSpeechText = "";
+    let voicesList = [];
 
     const menus = [
       { id: 'abc', title: 'ABC', icon: 'font_download', color: '#FF6B6B' },
@@ -404,7 +405,18 @@
     window.onload = () => {
       renderMenu();
       loadProgressFromFirebase();
+      initSpeech();
     };
+
+    function initSpeech() {
+      if ('speechSynthesis' in window) {
+        // Muat senarai suara untuk Chrome/Android/iOS
+        voicesList = window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => {
+          voicesList = window.speechSynthesis.getVoices();
+        };
+      }
+    }
 
     function renderMenu() {
       const container = document.getElementById('menu-container');
@@ -471,13 +483,38 @@
     }
 
     function speakText(text) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ms-MY'; // Bahasa Melayu
-        utterance.rate = 0.8; // Sebutan agak perlahan untuk kanak-kanak
-        window.speechSynthesis.speak(utterance);
+      if (!('speechSynthesis' in window)) {
+        alert("Sistem pembaca suara tidak disokong pada pelayar ini.");
+        return;
       }
+
+      // Resume sekiranya audio di-pause oleh sistem peranti
+      window.speechSynthesis.resume();
+      window.speechSynthesis.cancel(); // Hentikan sebutan sebelumnya
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Mengesan sokongan bahasa Melayu atau fallback ke suara lalai
+      if (voicesList.length === 0) {
+        voicesList = window.speechSynthesis.getVoices();
+      }
+
+      const msVoice = voicesList.find(v => v.lang.includes('ms') || v.lang.includes('id'));
+      if (msVoice) {
+        utterance.voice = msVoice;
+      } else {
+        utterance.lang = 'ms-MY';
+      }
+
+      utterance.rate = 0.85; // Kelajuan sebutan sesuai untuk prasekolah
+      utterance.pitch = 1.1;  // Nada lebih mesra budak-budak
+
+      // Penanganan isu tak bersuara dalam Chrome/Mobile
+      utterance.onerror = (e) => {
+        console.error("Speech Error:", e);
+      };
+
+      window.speechSynthesis.speak(utterance);
     }
 
     // ----------------------------------------------------
