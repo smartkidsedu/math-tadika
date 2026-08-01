@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mari Belajar 4,5,6 - Prasekolah Malaysia</title>
+  
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #FF6B6B;
+      --secondary: #4ECDC4;
+      --accent: #FFE66D;
+      --bg: #F7F9FC;
+      --card-bg: #FFFFFF;
+      --text: #2C3E50;
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Fredoka', cursive, sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #E0F7FA;
+      background-image: radial-gradient(#B2EBF2 2px, transparent 2px);
+      background-size: 24px 24px;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* Header & Stats Bar */
+    header {
+      width: 100%;
+      max-width: 900px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      border-radius: 0 0 24px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand h1 {
+      font-size: 1.6rem;
+      color: #FF5722;
+      text-shadow: 2px 2px 0px #FFE0B2;
+    }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+    }
+
+    .stat-badge {
+      background: #FFF9C4;
+      border: 3px solid #FBC02D;
+      padding: 6px 16px;
+      border-radius: 50px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    /* Container Views */
+    .container {
+      width: 100%;
+      max-width: 900px;
+      padding: 24px;
+      flex: 1;
+    }
+
+    .view {
+      display: none;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Main Menu Grid */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 18px;
+    }
+
+    .menu-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 20px 10px;
+      text-align: center;
+      box-shadow: 0 10px 0px #CFD8DC, 0 10px 20px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      border: 4px solid white;
+    }
+
+    .menu-card:active {
+      transform: translateY(6px);
+      box-shadow: 0 4px 0px #CFD8DC, 0 5px 10px rgba(0,0,0,0.08);
+    }
+
+    .menu-card i {
+      font-size: 48px;
+      border-radius: 50%;
+      padding: 12px;
+      color: white;
+    }
+
+    .menu-card span {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    /* Top Bar Module Nav */
+    .module-nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .btn-back {
+      background: #FF5252;
+      color: white;
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #D32F2F;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-back:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #D32F2F;
+    }
+
+    /* Module Contents */
+    .grid-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 16px;
+    }
+
+    .item-btn {
+      background: white;
+      border: 3px solid #B0BEC5;
+      border-radius: 20px;
+      padding: 16px;
+      font-size: 1.8rem;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #B0BEC5;
+      transition: transform 0.1s;
+    }
+
+    .item-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #B0BEC5;
+    }
+
+    /* Modal / Popup Display */
+    .display-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 30px;
+      text-align: center;
+      margin-top: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .display-card .big-text {
+      font-size: 5rem;
+      color: var(--primary);
+    }
+
+    .display-card .sub-text {
+      font-size: 2rem;
+      margin-top: 10px;
+      color: #37474F;
+    }
+
+    /* Quiz Section */
+    .quiz-box {
+      background: white;
+      padding: 24px;
+      border-radius: var(--radius);
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .option-btn {
+      background: #E3F2FD;
+      border: 3px solid #2196F3;
+      padding: 20px;
+      border-radius: 16px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #1E88E5;
+    }
+
+    .option-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #1E88E5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar Stats -->
+  <header>
+    <div class="brand">
+      <span class="material-icons-round" style="font-size: 40px; color:#FF9800;">child_care</span>
+      <h1>Mari Belajar</h1>
+    </div>
+    <div class="stats">
+      <div class="stat-badge">
+        <span class="material-icons-round" style="color: #FBC02D;">star</span>
+        <span id="star-count">0</span>
+      </div>
+      <div class="stat-badge">
+        <span class="material-icons-round" style="color: #FF9800;">monetization_on</span>
+        <span id="coin-count">0</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- MENU UTAMA -->
+    <div id="view-menu" class="view active">
+      <div class="menu-grid" id="menu-container"></div>
+    </div>
+
+    <!-- MODUL PEMBELAJARAN (GENERIC) -->
+    <div id="view-module" class="view">
+      <div class="module-nav">
+        <button class="btn-back" onclick="showMenu()"><span class="material-icons-round">arrow_back</span></button>
+        <h2 id="module-title" style="font-size: 2rem;">Tajuk Modul</h2>
+      </div>
+
+      <div class="grid-items" id="module-items"></div>
+
+      <div class="display-card" id="display-card" style="display: none;">
+        <div class="big-text" id="display-symbol">A</div>
+        <div class="sub-text" id="display-word">Ayam</div>
+        <button class="item-btn" style="margin-top: 15px; background: #C8E6C9; border-color: #4CAF50;" onclick="playCurrentAudio()">
+          🔊 Dengar Sebutan
+        </button>
+      </div>
+    </div>
+
+    <!-- MODUL KUIZ -->
+    <div id="view-quiz" class="view">
+      <div class="module-nav">
+        <button class="btn-back" onclick="showMenu()"><span class="material-icons-round">arrow_back</span></button>
+        <h2>Kuiz Interaktif</h2>
+      </div>
+      <div class="quiz-box">
+        <h3 id="quiz-question" style="font-size: 1.8rem; margin-bottom: 20px;">Soalan Kuiz</h3>
+        <div class="options-grid" id="quiz-options"></div>
+      </div>
+    </div>
+
+    <!-- MODUL LAPORAN KEMAJUAN (UNTUK IBU BAPA/GURU) -->
+    <div id="view-report" class="view">
+      <div class="module-nav">
+        <button class="btn-back" onclick="showMenu()"><span class="material-icons-round">arrow_back</span></button>
+        <h2>Laporan Kemajuan</h2>
+      </div>
+      <div class="display-card" style="text-align: left;">
+        <h3 style="margin-bottom: 10px;">Ringkasan Pembelajaran Murid</h3>
+        <p><strong>Jumlah Bintang:</strong> <span id="report-stars">0</span> ⭐️</p>
+        <p><strong>Jumlah Syiling:</strong> <span id="report-coins">0</span> 🪙</p>
+        <p><strong>Status Kurikulum:</strong> Memenuhi Standard KSPK (4-6 Tahun)</p>
+        <hr style="margin: 15px 0;">
+        <p style="font-size: 0.9rem; color: #666;">* Modul ini direka khas untuk pemantauan ibu bapa & guru bagi mengukur tahap pemahaman anak-anak.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ----------------------------------------------------
+    // 1. FIREBASE CONFIGURATION
+    // ----------------------------------------------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyBOw_xxTA0AhiCv3r7fV8z9CsJ58z6X56A",
+      authDomain: "math-d414c.firebaseapp.com",
+      databaseURL: "https://math-d414c-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "math-d414c",
+      storageBucket: "math-d414c.firebasestorage.app",
+      messagingSenderId: "820753320007",
+      appId: "1:820753320007:web:117febf749708a2179c962"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ----------------------------------------------------
+    // 2. STATE & DATA MANAGEMENT
+    // ----------------------------------------------------
+    let stars = 0;
+    let coins = 0;
+    let currentSpeechText = "";
+
+    const menus = [
+      { id: 'abc', title: 'ABC', icon: 'font_download', color: '#FF6B6B' },
+      { id: 'nombor', title: 'Nombor', icon: 'pin', color: '#4ECDC4' },
+      { id: 'warna', title: 'Warna', icon: 'palette', color: '#FFD166' },
+      { id: 'bentuk', title: 'Bentuk', icon: 'category', color: '#06D6A0' },
+      { id: 'haiwan', title: 'Haiwan', icon: 'pets', color: '#118AB2' },
+      { id: 'buah', title: 'Buah-buahan', icon: 'nutrition', color: '#FF9F1C' },
+      { id: 'sayur', title: 'Sayur-sayuran', icon: 'eco', color: '#2EC4B6' },
+      { id: 'kenderaan', title: 'Kenderaan', icon: 'directions_car', color: '#E71D36' },
+      { id: 'badan', title: 'Anggota Badan', icon: 'accessibility_new', color: '#7209B7' },
+      { id: 'jawi', title: 'Huruf Jawi', icon: 'translate', color: '#3A0CA3' },
+      { id: 'doa', title: 'Doa Harian', icon: 'menu_book', color: '#4361EE' },
+      { id: 'lagu', title: 'Lagu', icon: 'music_note', color: '#4CC9F0' },
+      { id: 'kuiz', title: 'Kuiz', icon: 'extension', color: '#F72585' },
+      { id: 'laporan', title: 'Laporan', icon: 'insights', color: '#4895EF' }
+    ];
+
+    const moduleData = {
+      abc: [
+        { symbol: 'A a', word: 'Ayam' }, { symbol: 'B b', word: 'Bola' },
+        { symbol: 'C c', word: 'Ceri' }, { symbol: 'D d', word: 'Daun' },
+        { symbol: 'E e', word: 'Epal' }, { symbol: 'F f', word: 'Feri' }
+      ],
+      nombor: [
+        { symbol: '1', word: 'Satu' }, { symbol: '2', word: 'Dua' },
+        { symbol: '3', word: 'Tiga' }, { symbol: '4', word: 'Empat' },
+        { symbol: '5', word: 'Lima' }, { symbol: '6', word: 'Enam' }
+      ],
+      warna: [
+        { symbol: '🔴', word: 'Merah' }, { symbol: '🔵', word: 'Biru' },
+        { symbol: '🟡', word: 'Kuning' }, { symbol: '🟢', word: 'Hijau' }
+      ],
+      jawi: [
+        { symbol: 'ا', word: 'Alif - Ayam' }, { symbol: 'ب', word: 'Ba - Bola' },
+        { symbol: 'ت', word: 'Ta - Tali' }, { symbol: 'ث', word: 'Tha - Salji' }
+      ]
+    };
+
+    // ----------------------------------------------------
+    // 3. INITIALIZATION
+    // ----------------------------------------------------
+    window.onload = () => {
+      renderMenu();
+      loadProgressFromFirebase();
+    };
+
+    function renderMenu() {
+      const container = document.getElementById('menu-container');
+      container.innerHTML = menus.map(m => `
+        <div class="menu-card" onclick="openModule('${m.id}', '${m.title}')">
+          <i class="material-icons-round" style="background:${m.color}">${m.icon}</i>
+          <span>${m.title}</span>
+        </div>
+      `).join('');
+    }
+
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+    }
+
+    function showMenu() {
+      showView('view-menu');
+    }
+
+    // ----------------------------------------------------
+    // 4. MODULE & SPEECH SYNTHESIS (MALAY AUDIO)
+    // ----------------------------------------------------
+    function openModule(id, title) {
+      if (id === 'kuiz') {
+        startQuiz();
+        return;
+      }
+      if (id === 'laporan') {
+        document.getElementById('report-stars').innerText = stars;
+        document.getElementById('report-coins').innerText = coins;
+        showView('view-report');
+        return;
+      }
+
+      document.getElementById('module-title').innerText = title;
+      const itemsContainer = document.getElementById('module-items');
+      const displayCard = document.getElementById('display-card');
+      displayCard.style.display = 'none';
+
+      const data = moduleData[id] || moduleData['abc']; // Fallback data
+
+      itemsContainer.innerHTML = data.map((item, index) => `
+        <div class="item-btn" onclick="selectItem('${item.symbol}', '${item.word}')">
+          ${item.symbol}
+        </div>
+      `).join('');
+
+      showView('view-module');
+    }
+
+    function selectItem(symbol, word) {
+      document.getElementById('display-card').style.display = 'block';
+      document.getElementById('display-symbol').innerText = symbol;
+      document.getElementById('display-word').innerText = word;
+      
+      currentSpeechText = `${symbol}. ${word}`;
+      speakText(currentSpeechText);
+      addReward(1, 2);
+    }
+
+    function playCurrentAudio() {
+      if (currentSpeechText) speakText(currentSpeechText);
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ms-MY'; // Bahasa Melayu
+        utterance.rate = 0.8; // Sebutan agak perlahan untuk kanak-kanak
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // ----------------------------------------------------
+    // 5. QUIZ ENGINE & GAMIFICATION
+    // ----------------------------------------------------
+    function startQuiz() {
+      showView('view-quiz');
+      document.getElementById('quiz-question').innerText = "Mana satu warna MERAH?";
+      const optionsContainer = document.getElementById('quiz-options');
+      
+      const options = [
+        { text: '🔴 Merah', correct: true },
+        { text: '🔵 Biru', correct: false },
+        { text: '🟡 Kuning', correct: false },
+        { text: '🟢 Hijau', correct: false }
+      ];
+
+      optionsContainer.innerHTML = options.map(opt => `
+        <button class="option-btn" onclick="checkAnswer(${opt.correct})">${opt.text}</button>
+      `).join('');
+    }
+
+    function checkAnswer(isCorrect) {
+      if (isCorrect) {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        speakText("Tahniah! Jawapan anda betul!");
+        addReward(5, 10);
+        setTimeout(showMenu, 2000);
+      } else {
+        speakText("Cuba lagi ya!");
+      }
+    }
+
+    function addReward(starAmt, coinAmt) {
+      stars += starAmt;
+      coins += coinAmt;
+      document.getElementById('star-count').innerText = stars;
+      document.getElementById('coin-count').innerText = coins;
+      saveProgressToFirebase();
+    }
+
+    // ----------------------------------------------------
+    // 6. FIREBASE REALTIME DATABASE SYNC
+    // ----------------------------------------------------
+    function saveProgressToFirebase() {
+      db.ref('students/child_01').set({
+        stars: stars,
+        coins: coins,
+        lastUpdated: new Date().toISOString()
+      });
+    }
+
+    function loadProgressFromFirebase() {
+      db.ref('students/child_01').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          stars = data.stars || 0;
+          coins = data.coins || 0;
+          document.getElementById('star-count').innerText = stars;
+          document.getElementById('coin-count').innerText = coins;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
